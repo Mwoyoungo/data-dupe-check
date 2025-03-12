@@ -1,7 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 // Default schema for vehicle data
 export const DEFAULT_VEHICLE_SCHEMA = [
@@ -21,9 +23,17 @@ export const DEFAULT_VEHICLE_SCHEMA = [
 
 interface VehicleSchemaInfoProps {
   onUseSchema: (schema: string[]) => void;
+  schemaKeyField: string;
+  onSchemaKeyFieldChange: (field: string) => void;
+  isSchemaActive: boolean;
 }
 
-const VehicleSchemaInfo: React.FC<VehicleSchemaInfoProps> = ({ onUseSchema }) => {
+const VehicleSchemaInfo: React.FC<VehicleSchemaInfoProps> = ({ 
+  onUseSchema, 
+  schemaKeyField, 
+  onSchemaKeyFieldChange,
+  isSchemaActive
+}) => {
   return (
     <div className="mb-6 p-4 rounded-md border border-yellow-500/30 bg-black/60 transition-all duration-200 ease-in-out">
       <div className="flex items-center justify-between mb-3">
@@ -53,7 +63,7 @@ const VehicleSchemaInfo: React.FC<VehicleSchemaInfoProps> = ({ onUseSchema }) =>
         If your CSV data doesn't have column headers, this predefined schema will be applied:
       </p>
       
-      <div className="bg-black/40 p-3 rounded border border-yellow-500/20 max-h-40 overflow-y-auto">
+      <div className="bg-black/40 p-3 rounded border border-yellow-500/20 max-h-40 overflow-y-auto mb-4">
         <div className="grid grid-cols-2 gap-2">
           {DEFAULT_VEHICLE_SCHEMA.map((field, index) => (
             <div key={field} className="flex items-center gap-2">
@@ -65,6 +75,29 @@ const VehicleSchemaInfo: React.FC<VehicleSchemaInfoProps> = ({ onUseSchema }) =>
           ))}
         </div>
       </div>
+
+      {isSchemaActive && (
+        <div className="mt-4 p-3 bg-yellow-500/10 rounded-md border border-yellow-500/20">
+          <Label htmlFor="schemaKeyField" className="text-sm text-yellow-400 flex items-center gap-2 mb-2">
+            <span className="emoji-shadow">🔑</span> Select Key Field from Schema
+          </Label>
+          <Select
+            value={schemaKeyField}
+            onValueChange={onSchemaKeyFieldChange}
+          >
+            <SelectTrigger id="schemaKeyField" className="bg-black/60 border-yellow-500/30 focus:ring-yellow-500/50">
+              <SelectValue placeholder="Select a field" />
+            </SelectTrigger>
+            <SelectContent className="bg-black border-yellow-500/30">
+              {DEFAULT_VEHICLE_SCHEMA.map((field) => (
+                <SelectItem key={field} value={field} className="focus:bg-yellow-500/20 focus:text-yellow-400">
+                  {field}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
     </div>
   );
 };

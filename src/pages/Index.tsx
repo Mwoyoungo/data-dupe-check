@@ -17,6 +17,7 @@ const Index = () => {
   const [file, setFile] = useState<File | null>(null);
   const [csvFields, setCsvFields] = useState<string[]>([]);
   const [keyField, setKeyField] = useState<string>('');
+  const [schemaKeyField, setSchemaKeyField] = useState<string>('StockCode');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [summary, setSummary] = useState<SummaryItem[]>([]);
@@ -69,11 +70,11 @@ const Index = () => {
   useEffect(() => {
     if (headers.length > 0) {
       setCsvFields(headers);
-      if (headers.length > 0) {
+      if (headers.length > 0 && !useCustomSchema) {
         setKeyField(headers[0]);
       }
     }
-  }, [headers]);
+  }, [headers, useCustomSchema]);
 
   const handleFileUpload = async (uploadedFile: File) => {
     setFile(uploadedFile);
@@ -91,7 +92,7 @@ const Index = () => {
   };
 
   const handleProcessData = async () => {
-    if (!file || !selectedCollection || !keyField || !parsedData.length) {
+    if (!file || !selectedCollection || !parsedData.length) {
       toast({
         title: "Missing information",
         description: "Please ensure all fields are filled and a CSV file is uploaded",
@@ -100,9 +101,21 @@ const Index = () => {
       return;
     }
 
+    // Use the appropriate key field based on whether we're using the schema or not
+    const activeKeyField = useCustomSchema ? schemaKeyField : keyField;
+    
+    if (!activeKeyField) {
+      toast({
+        title: "Missing key field",
+        description: "Please select a key field for duplicate checking",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsProcessing(true);
     try {
-      const result = await processCSVData(parsedData, selectedCollection, keyField);
+      const result = await processCSVData(parsedData, selectedCollection, activeKeyField);
       setSummary(result);
       toast({
         title: "Success",
@@ -125,6 +138,7 @@ const Index = () => {
     if (file) {
       parseCSV(file, schema);
     }
+    setSchemaKeyField('StockCode'); // Default to first field when schema is applied
     toast({
       title: "Vehicle schema applied",
       description: "The vehicle schema will be used for CSV files without headers",
@@ -192,7 +206,12 @@ const Index = () => {
                 disabled={isProcessing}
               />
 
-              <VehicleSchemaInfo onUseSchema={handleUseSchema} />
+              <VehicleSchemaInfo 
+                onUseSchema={handleUseSchema} 
+                schemaKeyField={schemaKeyField} 
+                onSchemaKeyFieldChange={setSchemaKeyField} 
+                isSchemaActive={useCustomSchema}
+              />
 
               {!file ? (
                 <FileUpload
@@ -213,7 +232,7 @@ const Index = () => {
                     </Button>
                   </div>
 
-                  {csvFields.length > 0 && (
+                  {csvFields.length > 0 && !useCustomSchema && (
                     <KeyFieldSelector
                       fields={csvFields}
                       selectedField={keyField}
@@ -224,7 +243,7 @@ const Index = () => {
 
                   <Button
                     onClick={handleProcessData}
-                    disabled={isProcessing || !keyField}
+                    disabled={isProcessing || (!keyField && !useCustomSchema) || (useCustomSchema && !schemaKeyField)}
                     className="w-full transition-all duration-200 bg-primary text-primary-foreground hover:bg-primary/90 glow-border"
                   >
                     {isProcessing ? (
@@ -242,7 +261,7 @@ const Index = () => {
 
       {summary.length > 0 && (
         <div className="mt-8 animate-in fade-in slide-in-from-bottom-4">
-          <ProcessingSummary summary={summary} keyField={keyField} />
+          <ProcessingSummary summary={summary} keyField={useCustomSchema ? schemaKeyField : keyField} />
         </div>
       )}
     </div>
