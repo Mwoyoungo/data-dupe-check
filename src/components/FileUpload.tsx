@@ -42,7 +42,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUploaded, isProcessing })
       <div
         {...getRootProps()}
         className={`border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer
-          ${isDragActive ? 'border-primary bg-primary/10' : 'border-gray-300 hover:border-primary'}
+          ${isDragActive ? 'border-primary bg-primary/10' : 'border-yellow-500/30 hover:border-primary'}
           ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
         onDragEnter={() => setDragActive(true)}
         onDragLeave={() => setDragActive(false)}
@@ -50,15 +50,15 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUploaded, isProcessing })
       >
         <input {...getInputProps()} />
         <div className="transition-transform duration-200 ease-in-out transform hover:scale-105">
-          <div className="text-4xl mb-2">📄</div>
-          <p className="text-lg font-medium mb-2">Drag & Drop your CSV file here</p>
-          <p className="text-sm text-gray-500 mb-4">or</p>
+          <div className="text-6xl mb-4 emoji-shadow float">📊</div>
+          <p className="text-lg font-medium mb-2 text-yellow-400">Drag & Drop your CSV file here</p>
+          <p className="text-sm text-gray-400 mb-4">or</p>
           <Button 
             variant="outline" 
             disabled={isProcessing}
-            className="transition-all duration-200"
+            className="transition-all duration-200 border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10"
           >
-            Browse files
+            <span className="mr-2">📂</span> Browse files
           </Button>
         </div>
       </div>

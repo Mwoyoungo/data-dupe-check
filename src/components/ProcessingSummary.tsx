@@ -24,11 +24,13 @@ const ProcessingSummary: React.FC<ProcessingSummaryProps> = ({ summary, keyField
   
   return (
     <div className="w-full transition-all duration-300 ease-in-out animate-in fade-in slide-in-from-bottom-4">
-      <Card>
+      <Card className="glow-card accent-gradient backdrop-blur-sm bg-black/50 border-primary/30">
         <CardHeader>
-          <CardTitle>Processing Summary</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <span className="text-2xl emoji-shadow">📋</span> Processing Summary
+          </CardTitle>
           <CardDescription>
-            {addedCount} documents added, {updatedCount} documents updated
+            <span className="text-green-400">{addedCount} documents added</span>, <span className="text-blue-400">{updatedCount} documents updated</span>
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -36,26 +38,27 @@ const ProcessingSummary: React.FC<ProcessingSummaryProps> = ({ summary, keyField
             {summary.map((item) => (
               <div 
                 key={item.id} 
-                className="p-4 rounded-md border transition-all duration-200 ease-in-out hover:shadow-md"
+                className="p-4 rounded-md border transition-all duration-200 ease-in-out hover:shadow-md bg-black/40 border-primary/20"
               >
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <span className="font-medium">{keyField}: </span>
                     <span>{item.keyValue}</span>
                   </div>
-                  <Badge variant={item.status === 'added' ? 'default' : 'secondary'}>
-                    {item.status === 'added' ? 'Added' : 'Updated'}
+                  <Badge variant={item.status === 'added' ? 'default' : 'secondary'} 
+                    className={item.status === 'added' ? 'bg-green-500/80' : 'bg-blue-500/80'}>
+                    {item.status === 'added' ? '✨ Added' : '🔄 Updated'}
                   </Badge>
                 </div>
                 
                 {item.fields && item.fields.length > 0 && (
                   <div className="mt-2">
-                    <p className="text-sm text-gray-500 mb-1">
-                      {item.status === 'updated' ? 'Updated fields:' : 'Fields added:'}
+                    <p className="text-sm text-gray-400 mb-1">
+                      {item.status === 'updated' ? '🔄 Updated fields:' : '✨ Fields added:'}
                     </p>
                     <div className="flex flex-wrap gap-1">
                       {item.fields.map((field) => (
-                        <Badge key={field} variant="outline" className="text-xs">
+                        <Badge key={field} variant="outline" className="text-xs border-yellow-500/30 text-yellow-400">
                           {field}
                         </Badge>
                       ))}

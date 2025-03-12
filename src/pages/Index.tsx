@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
@@ -29,7 +28,6 @@ const Index = () => {
         const collectionsList = await getCollections();
         console.log("Received collections:", collectionsList);
         
-        // Filter out single letter test collections
         const filteredCollections = collectionsList.filter(col => 
           col.length > 1 || ["a", "b", "c"].includes(col)
         );
@@ -38,7 +36,6 @@ const Index = () => {
         setCollections(filteredCollections);
         
         if (filteredCollections.length > 0) {
-          // Prioritize real collections over test ones
           const priorityCollections = ["vehichles", "vehicles", "products", "inventory", "orders"];
           const defaultCollection = priorityCollections.find(c => filteredCollections.includes(c)) || filteredCollections[0];
           setSelectedCollection(defaultCollection);
@@ -117,15 +114,25 @@ const Index = () => {
   };
 
   return (
-    <div className="container max-w-4xl mx-auto py-10 px-4">
+    <div className="container max-w-4xl mx-auto py-10 px-4 min-h-screen yellow-gradient">
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold mb-2">Firestore CSV Uploader</h1>
-        <p className="text-muted-foreground">Upload CSV data to Firestore with duplicate checking</p>
+        <h1 className="text-4xl font-bold mb-2 glow-text flex items-center justify-center gap-4">
+          <span className="text-5xl float emoji-shadow">🔥</span> 
+          Beny's CSV to Firebase Uploader 
+          <span className="text-5xl float-delayed emoji-shadow">⚡</span>
+        </h1>
+        <p className="text-muted-foreground text-lg">
+          <span className="text-2xl float-delayed-more mr-2 emoji-shadow">📊</span>
+          Upload CSV data to Firestore with duplicate checking
+          <span className="text-2xl float ml-2 emoji-shadow">🚀</span>
+        </p>
       </div>
 
-      <Card className="transition-all duration-300 ease-in-out">
+      <Card className="transition-all duration-300 ease-in-out glow-card accent-gradient backdrop-blur-sm bg-black/50 border-primary/30">
         <CardHeader>
-          <CardTitle>Upload & Process Data</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <span className="text-2xl emoji-shadow">📁</span> Upload & Process Data
+          </CardTitle>
           <CardDescription>Select a collection, upload a CSV file, and choose a key field for duplicate checking</CardDescription>
         </CardHeader>
         <CardContent>
@@ -135,19 +142,21 @@ const Index = () => {
               <p>Loading collections...</p>
             </div>
           ) : collections.length === 0 ? (
-            <div className="bg-yellow-50 p-4 rounded-md border border-yellow-200 mb-6">
-              <h3 className="font-medium text-yellow-800">No Collections Found</h3>
-              <p className="text-sm text-yellow-700 mt-1">
+            <div className="bg-black/60 p-6 rounded-md border border-yellow-500/30 mb-6">
+              <h3 className="font-medium text-yellow-500 flex items-center gap-2">
+                <span className="text-xl emoji-shadow">⚠️</span> No Collections Found
+              </h3>
+              <p className="text-sm text-yellow-300/80 mt-1">
                 No Firestore collections were found. This may be due to permissions issues. 
                 Please check your Firestore security rules to ensure read access is granted.
               </p>
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="mt-3" 
+                className="mt-3 border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10" 
                 onClick={() => window.location.reload()}
               >
-                Retry
+                <span className="mr-1">🔄</span> Retry
               </Button>
             </div>
           ) : (
@@ -166,13 +175,15 @@ const Index = () => {
                 />
               ) : (
                 <div className="w-full mb-8 animate-in fade-in">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-4 bg-black/40 p-4 rounded-lg border border-primary/20">
                     <div>
-                      <p className="font-medium">File uploaded:</p>
+                      <p className="font-medium flex items-center gap-2">
+                        <span className="emoji-shadow">📄</span> File uploaded:
+                      </p>
                       <p className="text-sm text-muted-foreground">{file.name}</p>
                     </div>
-                    <Button variant="outline" onClick={reset} disabled={isProcessing}>
-                      Change file
+                    <Button variant="outline" onClick={reset} disabled={isProcessing} className="border-primary/30 hover:bg-primary/10">
+                      <span className="mr-1">🔄</span> Change file
                     </Button>
                   </div>
 
@@ -188,9 +199,13 @@ const Index = () => {
                   <Button
                     onClick={handleProcessData}
                     disabled={isProcessing || !keyField}
-                    className="w-full transition-all duration-200"
+                    className="w-full transition-all duration-200 bg-primary text-primary-foreground hover:bg-primary/90 glow-border"
                   >
-                    {isProcessing ? "Processing..." : "Process Data"}
+                    {isProcessing ? (
+                      <><span className="animate-spin mr-2">⚙️</span> Processing...</>
+                    ) : (
+                      <><span className="mr-2">🚀</span> Process Data</>
+                    )}
                   </Button>
                 </div>
               )}
@@ -209,4 +224,3 @@ const Index = () => {
 };
 
 export default Index;
-
