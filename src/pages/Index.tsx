@@ -10,6 +10,7 @@ import VehicleSchemaInfo, { DEFAULT_VEHICLE_SCHEMA } from '@/components/VehicleS
 import useCSVParser from '@/hooks/useCSVParser';
 import { getCollections, processCSVData } from '@/services/firebaseService';
 import { Link } from 'react-router-dom';
+import { convertXLSXtoCSV, isXLSXFile } from '@/utils/csvUtils';
 
 const Index = () => {
   const [collections, setCollections] = useState<string[]>([]);
@@ -22,6 +23,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [summary, setSummary] = useState<SummaryItem[]>([]);
   const [useCustomSchema, setUseCustomSchema] = useState<boolean>(false);
+  const [isConverting, setIsConverting] = useState<boolean>(false);
   const { parseCSV, parsedData, headers } = useCSVParser();
 
   useEffect(() => {
@@ -79,13 +81,44 @@ const Index = () => {
   const handleFileUpload = async (uploadedFile: File) => {
     setFile(uploadedFile);
     try {
-      await parseCSV(uploadedFile, useCustomSchema ? DEFAULT_VEHICLE_SCHEMA : undefined);
+      if (isXLSXFile(uploadedFile)) {
+        setIsConverting(true);
+        toast({
+          title: "Converting XLSX",
+          description: "Converting your XLSX file to CSV format...",
+        });
+        
+        try {
+          const { csvFile, headers: xlsxHeaders } = await convertXLSXtoCSV(uploadedFile);
+          await parseCSV(csvFile);
+          
+          if (xlsxHeaders.length > 0) {
+            setKeyField(xlsxHeaders[0]);
+          }
+          
+          toast({
+            title: "Conversion complete",
+            description: "XLSX file successfully converted to CSV format.",
+          });
+        } catch (error) {
+          console.error("Error converting XLSX:", error);
+          toast({
+            title: "Conversion failed",
+            description: "Failed to convert XLSX file. Please check the file format.",
+            variant: "destructive"
+          });
+        } finally {
+          setIsConverting(false);
+        }
+      } else {
+        await parseCSV(uploadedFile, useCustomSchema ? DEFAULT_VEHICLE_SCHEMA : undefined);
+      }
       setSummary([]);
     } catch (error) {
       console.error("Error parsing CSV:", error);
       toast({
-        title: "Error parsing CSV",
-        description: "Failed to parse the CSV file. Please check the file format.",
+        title: "Error parsing file",
+        description: "Failed to parse the file. Please check the file format.",
         variant: "destructive"
       });
     }
@@ -166,7 +199,7 @@ const Index = () => {
           <CardTitle className="flex items-center gap-2">
             <span className="text-2xl emoji-shadow">📁</span> Upload & Process Data
           </CardTitle>
-          <CardDescription>Select a collection, upload a CSV file, and choose a key field for duplicate checking</CardDescription>
+          <CardDescription>Select a collection, upload a CSV or XLSX file, and choose a key field for duplicate checking</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -198,7 +231,7 @@ const Index = () => {
                 collections={collections}
                 selectedCollection={selectedCollection}
                 onCollectionChange={setSelectedCollection}
-                disabled={isProcessing}
+                disabled={isProcessing || isConverting}
               />
 
               <VehicleSchemaInfo 
@@ -211,7 +244,8 @@ const Index = () => {
               {!file ? (
                 <FileUpload
                   onFileUploaded={handleFileUpload}
-                  isProcessing={isProcessing}
+                  isProcessing={isProcessing || isConverting}
+                  acceptXLSX={true}
                 />
               ) : (
                 <div className="w-full mb-8 animate-in fade-in">
@@ -222,31 +256,40 @@ const Index = () => {
                       </p>
                       <p className="text-sm text-muted-foreground">{file.name}</p>
                     </div>
-                    <Button variant="outline" onClick={reset} disabled={isProcessing} className="border-primary/30 hover:bg-primary/10">
+                    <Button variant="outline" onClick={reset} disabled={isProcessing || isConverting} className="border-primary/30 hover:bg-primary/10">
                       <span className="mr-1">🔄</span> Change file
                     </Button>
                   </div>
 
-                  {csvFields.length > 0 && !useCustomSchema && (
-                    <KeyFieldSelector
-                      fields={csvFields}
-                      selectedField={keyField}
-                      onFieldChange={setKeyField}
-                      disabled={isProcessing}
-                    />
-                  )}
+                  {isConverting ? (
+                    <div className="flex items-center justify-center p-6 bg-black/40 rounded-lg border border-primary/20 mb-4">
+                      <div className="animate-spin h-6 w-6 border-2 border-primary rounded-full border-t-transparent mr-2"></div>
+                      <p>Converting XLSX to CSV...</p>
+                    </div>
+                  ) : (
+                    <>
+                      {csvFields.length > 0 && !useCustomSchema && (
+                        <KeyFieldSelector
+                          fields={csvFields}
+                          selectedField={keyField}
+                          onFieldChange={setKeyField}
+                          disabled={isProcessing}
+                        />
+                      )}
 
-                  <Button
-                    onClick={handleProcessData}
-                    disabled={isProcessing || (!keyField && !useCustomSchema) || (useCustomSchema && !schemaKeyField)}
-                    className="w-full transition-all duration-200 bg-primary text-primary-foreground hover:bg-primary/90 glow-border"
-                  >
-                    {isProcessing ? (
-                      <><span className="animate-spin mr-2">⚙️</span> Processing...</>
-                    ) : (
-                      <><span className="mr-2">🚀</span> Process Data</>
-                    )}
-                  </Button>
+                      <Button
+                        onClick={handleProcessData}
+                        disabled={isProcessing || isConverting || (!keyField && !useCustomSchema) || (useCustomSchema && !schemaKeyField)}
+                        className="w-full transition-all duration-200 bg-primary text-primary-foreground hover:bg-primary/90 glow-border"
+                      >
+                        {isProcessing ? (
+                          <><span className="animate-spin mr-2">⚙️</span> Processing...</>
+                        ) : (
+                          <><span className="mr-2">🚀</span> Process Data</>
+                        )}
+                      </Button>
+                    </>
+                  )}
                 </div>
               )}
             </>
