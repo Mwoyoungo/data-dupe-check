@@ -8,7 +8,8 @@ import {
   getDocs,
   getDoc,
   CollectionReference,
-  DocumentData
+  DocumentData,
+  listCollections
 } from 'firebase/firestore';
 import { SummaryItem } from '@/components/ProcessingSummary';
 
@@ -31,19 +32,50 @@ const db = getFirestore(app);
  */
 export const getCollections = async (): Promise<string[]> => {
   try {
-    // Since Firestore doesn't provide a direct way to list collections,
-    // we'll fetch from a metadata document in a 'system' collection
-    const metaDoc = doc(db, '_system', 'collections');
-    const docSnap = await getDoc(metaDoc);
-
-    if (docSnap.exists()) {
-      return docSnap.data().list || [];
+    // Unfortunately, Firebase web SDK doesn't support directly listing collections
+    // We need to query for known collections or create a fallback list
+    const collectionsToCheck = [
+      'products', 
+      'inventory', 
+      'orders', 
+      'customers', 
+      'users', 
+      'settings',
+      'categories'
+    ];
+    
+    const availableCollections: string[] = [];
+    
+    for (const colName of collectionsToCheck) {
+      try {
+        const colRef = collection(db, colName);
+        const snapshot = await getDocs(colRef);
+        
+        // If we can successfully query the collection, it exists
+        // We consider a collection exists even if it's empty
+        availableCollections.push(colName);
+        console.log(`Found collection: ${colName} with ${snapshot.size} documents`);
+      } catch (err) {
+        // Skip collections that don't exist or we can't access
+        console.log(`Collection ${colName} doesn't exist or is not accessible`);
+      }
     }
-
-    // If no metadata document exists, create it with some default collections
-    const defaultCollections = ['products', 'inventory'];
-    await setDoc(metaDoc, { list: defaultCollections });
-    return defaultCollections;
+    
+    if (availableCollections.length === 0) {
+      console.log("No collections found. Creating a default collection.");
+      // Create a default collection with a document if none exists
+      const defaultCollection = 'products';
+      const docRef = doc(collection(db, defaultCollection), 'sample');
+      await setDoc(docRef, { 
+        name: 'Sample Product', 
+        description: 'This is a sample product',
+        price: 19.99,
+        createdAt: new Date().toISOString()
+      });
+      return [defaultCollection];
+    }
+    
+    return availableCollections;
   } catch (error) {
     console.error('Error getting collections:', error);
     // Return default collections if there's an error
