@@ -1,0 +1,69 @@
+
+import React, { useCallback, useState } from 'react';
+import { useDropzone } from 'react-dropzone';
+import { Button } from '@/components/ui/button';
+import { toast } from '@/components/ui/use-toast';
+
+interface FileUploadProps {
+  onFileUploaded: (file: File) => void;
+  isProcessing: boolean;
+}
+
+const FileUpload: React.FC<FileUploadProps> = ({ onFileUploaded, isProcessing }) => {
+  const [dragActive, setDragActive] = useState(false);
+  
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles.length === 0) return;
+    
+    const file = acceptedFiles[0];
+    if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
+      toast({
+        title: "Invalid file format",
+        description: "Please upload a CSV file",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    onFileUploaded(file);
+  }, [onFileUploaded]);
+  
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'text/csv': ['.csv']
+    },
+    maxFiles: 1,
+    disabled: isProcessing
+  });
+  
+  return (
+    <div className="w-full mb-8">
+      <div
+        {...getRootProps()}
+        className={`border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer
+          ${isDragActive ? 'border-primary bg-primary/10' : 'border-gray-300 hover:border-primary'}
+          ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+        onDragEnter={() => setDragActive(true)}
+        onDragLeave={() => setDragActive(false)}
+        onDrop={() => setDragActive(false)}
+      >
+        <input {...getInputProps()} />
+        <div className="transition-transform duration-200 ease-in-out transform hover:scale-105">
+          <div className="text-4xl mb-2">📄</div>
+          <p className="text-lg font-medium mb-2">Drag & Drop your CSV file here</p>
+          <p className="text-sm text-gray-500 mb-4">or</p>
+          <Button 
+            variant="outline" 
+            disabled={isProcessing}
+            className="transition-all duration-200"
+          >
+            Browse files
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default FileUpload;
