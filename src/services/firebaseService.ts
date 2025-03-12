@@ -30,8 +30,10 @@ const db = getFirestore(app);
  */
 export const getCollections = async (): Promise<string[]> => {
   try {
-    // We need a more comprehensive list of potential collections to check
+    // Add your collection name explicitly to the check list
     const collectionsToCheck = [
+      'vehichles', // Note the spelling matches what you mentioned
+      'vehicles', // Alternative spelling in case of typo
       'products', 
       'inventory', 
       'orders', 
@@ -39,22 +41,7 @@ export const getCollections = async (): Promise<string[]> => {
       'users', 
       'settings',
       'categories',
-      'transactions',
-      'invoices',
-      'employees',
-      'suppliers',
-      'shipments',
-      'returns',
-      'promotions',
-      'store-locations',
-      'reviews',
-      'messages',
-      'notifications',
-      'payments',
-      'subscriptions',
-      'analytics',
-      'logs',
-      // Check if there are any collections with single-word names
+      // Add other potential collections
       ...Array.from({ length: 26 }, (_, i) => String.fromCharCode(97 + i))
     ];
     
@@ -62,44 +49,38 @@ export const getCollections = async (): Promise<string[]> => {
     
     console.log("Attempting to fetch Firestore collections...");
     
-    // Fetch first document from each potential collection to check if it exists
-    const fetchPromises = collectionsToCheck.map(async (colName) => {
+    // Process each collection sequentially to ensure we don't hit rate limits
+    for (const colName of collectionsToCheck) {
       try {
+        console.log(`Checking collection: ${colName}`);
         const colRef = collection(db, colName);
         const snapshot = await getDocs(colRef);
         
-        if (snapshot.size > 0 || true) { // Consider empty collections valid too
+        // Add to available collections even if empty
+        if (snapshot.docs.length >= 0) {
           availableCollections.push(colName);
-          console.log(`Found collection: ${colName} with ${snapshot.size} documents`);
+          console.log(`Found collection: ${colName} with ${snapshot.docs.length} documents`);
         }
       } catch (err) {
-        // Skip collections that don't exist or we can't access
-        console.log(`Collection ${colName} doesn't exist or is not accessible:`, err);
+        // If we get a permission error, log it clearly
+        if (err instanceof Error) {
+          if (err.message.includes('permission-denied')) {
+            console.error(`Permission denied for collection ${colName}. Check your Firestore rules.`, err);
+          } else {
+            console.log(`Collection ${colName} doesn't exist or error:`, err.message);
+          }
+        }
       }
-    });
-    
-    await Promise.all(fetchPromises);
-    
-    if (availableCollections.length === 0) {
-      console.log("No collections found. Creating a default collection.");
-      // Create a default collection with a document if none exists
-      const defaultCollection = 'products';
-      const docRef = doc(collection(db, defaultCollection), 'sample');
-      await setDoc(docRef, { 
-        name: 'Sample Product', 
-        description: 'This is a sample product',
-        price: 19.99,
-        createdAt: new Date().toISOString()
-      });
-      return [defaultCollection];
     }
     
-    console.log("Available collections:", availableCollections);
+    console.log("Available collections found:", availableCollections);
+    
+    // Return whatever collections we found without creating sample data
     return availableCollections;
   } catch (error) {
     console.error('Error getting collections:', error);
-    // Return default collections if there's an error
-    return ['products', 'inventory'];
+    // Return empty array instead of defaults
+    return [];
   }
 };
 

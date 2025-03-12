@@ -17,12 +17,14 @@ const Index = () => {
   const [csvFields, setCsvFields] = useState<string[]>([]);
   const [keyField, setKeyField] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [summary, setSummary] = useState<SummaryItem[]>([]);
   const { parseCSV, parsedData, headers } = useCSVParser();
 
   useEffect(() => {
     const fetchCollections = async () => {
       try {
+        setIsLoading(true);
         console.log("Fetching Firestore collections...");
         const collectionsList = await getCollections();
         console.log("Received collections:", collectionsList);
@@ -33,8 +35,8 @@ const Index = () => {
         } else {
           console.warn("No collections received from Firestore");
           toast({
-            title: "Warning",
-            description: "No collections found in Firestore",
+            title: "No collections found",
+            description: "Make sure you have proper permissions to access Firestore collections. Check your Firebase console and security rules.",
             variant: "destructive"
           });
         }
@@ -42,9 +44,11 @@ const Index = () => {
         console.error("Error fetching collections:", error);
         toast({
           title: "Error",
-          description: "Failed to fetch Firestore collections",
+          description: "Failed to fetch Firestore collections. Check console for details.",
           variant: "destructive"
         });
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -114,47 +118,72 @@ const Index = () => {
           <CardDescription>Select a collection, upload a CSV file, and choose a key field for duplicate checking</CardDescription>
         </CardHeader>
         <CardContent>
-          <CollectionSelector
-            collections={collections}
-            selectedCollection={selectedCollection}
-            onCollectionChange={setSelectedCollection}
-            disabled={isProcessing}
-          />
-
-          {!file ? (
-            <FileUpload
-              onFileUploaded={handleFileUpload}
-              isProcessing={isProcessing}
-            />
-          ) : (
-            <div className="w-full mb-8 animate-in fade-in">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="font-medium">File uploaded:</p>
-                  <p className="text-sm text-muted-foreground">{file.name}</p>
-                </div>
-                <Button variant="outline" onClick={reset} disabled={isProcessing}>
-                  Change file
-                </Button>
-              </div>
-
-              {csvFields.length > 0 && (
-                <KeyFieldSelector
-                  fields={csvFields}
-                  selectedField={keyField}
-                  onFieldChange={setKeyField}
-                  disabled={isProcessing}
-                />
-              )}
-
-              <Button
-                onClick={handleProcessData}
-                disabled={isProcessing || !keyField}
-                className="w-full transition-all duration-200"
+          {isLoading ? (
+            <div className="flex items-center justify-center p-6">
+              <div className="animate-spin h-6 w-6 border-2 border-primary rounded-full border-t-transparent mr-2"></div>
+              <p>Loading collections...</p>
+            </div>
+          ) : collections.length === 0 ? (
+            <div className="bg-yellow-50 p-4 rounded-md border border-yellow-200 mb-6">
+              <h3 className="font-medium text-yellow-800">No Collections Found</h3>
+              <p className="text-sm text-yellow-700 mt-1">
+                No Firestore collections were found. This may be due to permissions issues. 
+                Please check your Firestore security rules to ensure read access is granted.
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-3" 
+                onClick={() => window.location.reload()}
               >
-                {isProcessing ? "Processing..." : "Process Data"}
+                Retry
               </Button>
             </div>
+          ) : (
+            <>
+              <CollectionSelector
+                collections={collections}
+                selectedCollection={selectedCollection}
+                onCollectionChange={setSelectedCollection}
+                disabled={isProcessing}
+              />
+
+              {!file ? (
+                <FileUpload
+                  onFileUploaded={handleFileUpload}
+                  isProcessing={isProcessing}
+                />
+              ) : (
+                <div className="w-full mb-8 animate-in fade-in">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="font-medium">File uploaded:</p>
+                      <p className="text-sm text-muted-foreground">{file.name}</p>
+                    </div>
+                    <Button variant="outline" onClick={reset} disabled={isProcessing}>
+                      Change file
+                    </Button>
+                  </div>
+
+                  {csvFields.length > 0 && (
+                    <KeyFieldSelector
+                      fields={csvFields}
+                      selectedField={keyField}
+                      onFieldChange={setKeyField}
+                      disabled={isProcessing}
+                    />
+                  )}
+
+                  <Button
+                    onClick={handleProcessData}
+                    disabled={isProcessing || !keyField}
+                    className="w-full transition-all duration-200"
+                  >
+                    {isProcessing ? "Processing..." : "Process Data"}
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
@@ -169,4 +198,3 @@ const Index = () => {
 };
 
 export default Index;
-
