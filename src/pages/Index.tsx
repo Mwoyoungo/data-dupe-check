@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
@@ -6,6 +7,7 @@ import FileUpload from '@/components/FileUpload';
 import CollectionSelector from '@/components/CollectionSelector';
 import KeyFieldSelector from '@/components/KeyFieldSelector';
 import ProcessingSummary, { SummaryItem } from '@/components/ProcessingSummary';
+import VehicleSchemaInfo, { DEFAULT_VEHICLE_SCHEMA } from '@/components/VehicleSchemaInfo';
 import useCSVParser from '@/hooks/useCSVParser';
 import { getCollections, processCSVData } from '@/services/firebaseService';
 
@@ -18,6 +20,7 @@ const Index = () => {
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [summary, setSummary] = useState<SummaryItem[]>([]);
+  const [useCustomSchema, setUseCustomSchema] = useState<boolean>(false);
   const { parseCSV, parsedData, headers } = useCSVParser();
 
   useEffect(() => {
@@ -74,8 +77,17 @@ const Index = () => {
 
   const handleFileUpload = async (uploadedFile: File) => {
     setFile(uploadedFile);
-    await parseCSV(uploadedFile);
-    setSummary([]);
+    try {
+      await parseCSV(uploadedFile, useCustomSchema ? DEFAULT_VEHICLE_SCHEMA : undefined);
+      setSummary([]);
+    } catch (error) {
+      console.error("Error parsing CSV:", error);
+      toast({
+        title: "Error parsing CSV",
+        description: "Failed to parse the CSV file. Please check the file format.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleProcessData = async () => {
@@ -108,9 +120,21 @@ const Index = () => {
     }
   };
 
+  const handleUseSchema = (schema: string[]) => {
+    setUseCustomSchema(true);
+    if (file) {
+      parseCSV(file, schema);
+    }
+    toast({
+      title: "Vehicle schema applied",
+      description: "The vehicle schema will be used for CSV files without headers",
+    });
+  };
+
   const reset = () => {
     setFile(null);
     setSummary([]);
+    setUseCustomSchema(false);
   };
 
   return (
@@ -167,6 +191,8 @@ const Index = () => {
                 onCollectionChange={setSelectedCollection}
                 disabled={isProcessing}
               />
+
+              <VehicleSchemaInfo onUseSchema={handleUseSchema} />
 
               {!file ? (
                 <FileUpload
