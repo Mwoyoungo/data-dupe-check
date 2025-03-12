@@ -1,3 +1,4 @@
+
 import { initializeApp } from 'firebase/app';
 import {
   getFirestore,
@@ -11,14 +12,14 @@ import {
 } from 'firebase/firestore';
 import { SummaryItem } from '@/components/ProcessingSummary';
 
-// Firebase configuration
+// Firebase configuration with your project details
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  apiKey: "AIzaSyAAmWIMqalNVqfkyS-lwoos6TcnZm9B3f4",
+  authDomain: "shacmanadmin-r81fqi.firebaseapp.com",
+  projectId: "shacmanadmin-r81fqi",
+  storageBucket: "shacmanadmin-r81fqi.firebasestorage.app",
+  messagingSenderId: "650817347403",
+  appId: "1:650817347403:web:5956355f6a09d7dbe612ce"
 };
 
 // Initialize Firebase
