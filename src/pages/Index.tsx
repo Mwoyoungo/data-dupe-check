@@ -23,10 +23,20 @@ const Index = () => {
   useEffect(() => {
     const fetchCollections = async () => {
       try {
+        console.log("Fetching Firestore collections...");
         const collectionsList = await getCollections();
+        console.log("Received collections:", collectionsList);
+        
         setCollections(collectionsList);
         if (collectionsList.length > 0) {
           setSelectedCollection(collectionsList[0]);
+        } else {
+          console.warn("No collections received from Firestore");
+          toast({
+            title: "Warning",
+            description: "No collections found in Firestore",
+            variant: "destructive"
+          });
         }
       } catch (error) {
         console.error("Error fetching collections:", error);
@@ -159,3 +169,4 @@ const Index = () => {
 };
 
 export default Index;
+

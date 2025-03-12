@@ -30,8 +30,7 @@ const db = getFirestore(app);
  */
 export const getCollections = async (): Promise<string[]> => {
   try {
-    // Unfortunately, Firebase web SDK doesn't support directly listing collections
-    // We need to query for known collections or create a fallback list
+    // We need a more comprehensive list of potential collections to check
     const collectionsToCheck = [
       'products', 
       'inventory', 
@@ -39,25 +38,47 @@ export const getCollections = async (): Promise<string[]> => {
       'customers', 
       'users', 
       'settings',
-      'categories'
+      'categories',
+      'transactions',
+      'invoices',
+      'employees',
+      'suppliers',
+      'shipments',
+      'returns',
+      'promotions',
+      'store-locations',
+      'reviews',
+      'messages',
+      'notifications',
+      'payments',
+      'subscriptions',
+      'analytics',
+      'logs',
+      // Check if there are any collections with single-word names
+      ...Array.from({ length: 26 }, (_, i) => String.fromCharCode(97 + i))
     ];
     
     const availableCollections: string[] = [];
     
-    for (const colName of collectionsToCheck) {
+    console.log("Attempting to fetch Firestore collections...");
+    
+    // Fetch first document from each potential collection to check if it exists
+    const fetchPromises = collectionsToCheck.map(async (colName) => {
       try {
         const colRef = collection(db, colName);
         const snapshot = await getDocs(colRef);
         
-        // If we can successfully query the collection, it exists
-        // We consider a collection exists even if it's empty
-        availableCollections.push(colName);
-        console.log(`Found collection: ${colName} with ${snapshot.size} documents`);
+        if (snapshot.size > 0 || true) { // Consider empty collections valid too
+          availableCollections.push(colName);
+          console.log(`Found collection: ${colName} with ${snapshot.size} documents`);
+        }
       } catch (err) {
         // Skip collections that don't exist or we can't access
-        console.log(`Collection ${colName} doesn't exist or is not accessible`);
+        console.log(`Collection ${colName} doesn't exist or is not accessible:`, err);
       }
-    }
+    });
+    
+    await Promise.all(fetchPromises);
     
     if (availableCollections.length === 0) {
       console.log("No collections found. Creating a default collection.");
@@ -73,6 +94,7 @@ export const getCollections = async (): Promise<string[]> => {
       return [defaultCollection];
     }
     
+    console.log("Available collections:", availableCollections);
     return availableCollections;
   } catch (error) {
     console.error('Error getting collections:', error);
