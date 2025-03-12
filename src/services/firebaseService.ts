@@ -1,4 +1,3 @@
-
 import { initializeApp } from 'firebase/app';
 import {
   getFirestore,
@@ -8,8 +7,7 @@ import {
   getDocs,
   getDoc,
   CollectionReference,
-  DocumentData,
-  listCollections
+  DocumentData
 } from 'firebase/firestore';
 import { SummaryItem } from '@/components/ProcessingSummary';
 
