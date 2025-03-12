@@ -1,4 +1,3 @@
-
 import { initializeApp } from 'firebase/app';
 import {
   getFirestore,
@@ -7,14 +6,12 @@ import {
   setDoc,
   getDocs,
   getDoc,
-  FirestoreError,
   CollectionReference,
   DocumentData
 } from 'firebase/firestore';
 import { SummaryItem } from '@/components/ProcessingSummary';
 
-// Your Firebase configuration
-// NOTE: This should be moved to environment variables in a production app
+// Firebase configuration
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -33,21 +30,23 @@ const db = getFirestore(app);
  */
 export const getCollections = async (): Promise<string[]> => {
   try {
-    // NOTE: Firestore doesn't provide a direct way to list all collections
-    // This is a workaround that requires you to have a special document that lists all collections
-    // In a real app, you might hardcode this or use a different approach
-    const collectionsRef = doc(db, 'meta', 'collections');
-    const collectionsSnap = await getDoc(collectionsRef);
-    
-    if (collectionsSnap.exists()) {
-      return collectionsSnap.data().list || [];
+    // Since Firestore doesn't provide a direct way to list collections,
+    // we'll fetch from a metadata document in a 'system' collection
+    const metaDoc = doc(db, '_system', 'collections');
+    const docSnap = await getDoc(metaDoc);
+
+    if (docSnap.exists()) {
+      return docSnap.data().list || [];
     }
-    
-    // Fallback to some default collections if the meta document doesn't exist
-    return ['products', 'customers', 'orders', 'inventory'];
+
+    // If no metadata document exists, create it with some default collections
+    const defaultCollections = ['products', 'inventory'];
+    await setDoc(metaDoc, { list: defaultCollections });
+    return defaultCollections;
   } catch (error) {
     console.error('Error getting collections:', error);
-    throw error;
+    // Return default collections if there's an error
+    return ['products', 'inventory'];
   }
 };
 
