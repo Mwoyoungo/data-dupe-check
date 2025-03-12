@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
@@ -10,6 +9,7 @@ import ProcessingSummary, { SummaryItem } from '@/components/ProcessingSummary';
 import VehicleSchemaInfo, { DEFAULT_VEHICLE_SCHEMA } from '@/components/VehicleSchemaInfo';
 import useCSVParser from '@/hooks/useCSVParser';
 import { getCollections, processCSVData } from '@/services/firebaseService';
+import { Link } from 'react-router-dom';
 
 const Index = () => {
   const [collections, setCollections] = useState<string[]>([]);
@@ -101,7 +101,6 @@ const Index = () => {
       return;
     }
 
-    // Use the appropriate key field based on whether we're using the schema or not
     const activeKeyField = useCustomSchema ? schemaKeyField : keyField;
     
     if (!activeKeyField) {
@@ -138,7 +137,7 @@ const Index = () => {
     if (file) {
       parseCSV(file, schema);
     }
-    setSchemaKeyField('StockCode'); // Default to first field when schema is applied
+    setSchemaKeyField('StockCode');
     toast({
       title: "Vehicle schema applied",
       description: "The vehicle schema will be used for CSV files without headers",
@@ -152,18 +151,14 @@ const Index = () => {
   };
 
   return (
-    <div className="container max-w-4xl mx-auto py-10 px-4 min-h-screen yellow-gradient">
-      <div className="mb-8 text-center">
-        <h1 className="text-4xl font-bold mb-2 glow-text flex items-center justify-center gap-4">
-          <span className="text-5xl float emoji-shadow">🔥</span> 
-          Beny's CSV to Firebase Uploader 
-          <span className="text-5xl float-delayed emoji-shadow">⚡</span>
-        </h1>
-        <p className="text-muted-foreground text-lg">
-          <span className="text-2xl float-delayed-more mr-2 emoji-shadow">📊</span>
-          Upload CSV data to Firestore with duplicate checking
-          <span className="text-2xl float ml-2 emoji-shadow">🚀</span>
-        </p>
+    <div className="container mx-auto py-8 px-4">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-yellow-400">CSV Processor</h1>
+        <Link to="/csv-header-generator">
+          <Button variant="outline" className="ml-2">
+            CSV Header Generator
+          </Button>
+        </Link>
       </div>
 
       <Card className="transition-all duration-300 ease-in-out glow-card accent-gradient backdrop-blur-sm bg-black/50 border-primary/30">
