@@ -57,17 +57,16 @@ export const getCollections = async (): Promise<string[]> => {
         const snapshot = await getDocs(colRef);
         
         // Add to available collections even if empty
-        if (snapshot.docs.length >= 0) {
-          availableCollections.push(colName);
-          console.log(`Found collection: ${colName} with ${snapshot.docs.length} documents`);
-        }
+        // Success - add to available collections
+        availableCollections.push(colName);
+        console.log(`✅ Found collection: ${colName} with ${snapshot.docs.length} documents`);
       } catch (err) {
         // If we get a permission error, log it clearly
         if (err instanceof Error) {
           if (err.message.includes('permission-denied')) {
-            console.error(`Permission denied for collection ${colName}. Check your Firestore rules.`, err);
+            console.error(`❌ Permission denied for collection ${colName}. Check your Firestore rules.`, err);
           } else {
-            console.log(`Collection ${colName} doesn't exist or error:`, err.message);
+            console.log(`❓ Collection ${colName} doesn't exist or error:`, err.message);
           }
         }
       }
@@ -75,11 +74,11 @@ export const getCollections = async (): Promise<string[]> => {
     
     console.log("Available collections found:", availableCollections);
     
-    // Return whatever collections we found without creating sample data
+    // Return whatever collections we found
     return availableCollections;
   } catch (error) {
     console.error('Error getting collections:', error);
-    // Return empty array instead of defaults
+    // Return empty array
     return [];
   }
 };

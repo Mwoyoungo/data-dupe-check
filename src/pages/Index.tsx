@@ -29,9 +29,20 @@ const Index = () => {
         const collectionsList = await getCollections();
         console.log("Received collections:", collectionsList);
         
-        setCollections(collectionsList);
-        if (collectionsList.length > 0) {
-          setSelectedCollection(collectionsList[0]);
+        // Filter out single letter test collections
+        const filteredCollections = collectionsList.filter(col => 
+          col.length > 1 || ["a", "b", "c"].includes(col)
+        );
+        
+        console.log("Filtered collections for display:", filteredCollections);
+        setCollections(filteredCollections);
+        
+        if (filteredCollections.length > 0) {
+          // Prioritize real collections over test ones
+          const priorityCollections = ["vehichles", "vehicles", "products", "inventory", "orders"];
+          const defaultCollection = priorityCollections.find(c => filteredCollections.includes(c)) || filteredCollections[0];
+          setSelectedCollection(defaultCollection);
+          console.log("Selected default collection:", defaultCollection);
         } else {
           console.warn("No collections received from Firestore");
           toast({
@@ -198,3 +209,4 @@ const Index = () => {
 };
 
 export default Index;
+
