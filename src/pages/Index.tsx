@@ -187,11 +187,18 @@ const Index = () => {
     <div className="container mx-auto py-8 px-4">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-yellow-400">CSV Processor</h1>
-        <Link to="/csv-header-generator">
-          <Button variant="outline" className="ml-2">
-            CSV Header Generator
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link to="/csv-header-generator">
+            <Button variant="outline" className="ml-2">
+              CSV Header Generator
+            </Button>
+          </Link>
+          <Link to="/csv-schema-alignment">
+            <Button variant="outline" className="ml-2">
+              CSV Schema Alignment
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <Card className="transition-all duration-300 ease-in-out glow-card accent-gradient backdrop-blur-sm bg-black/50 border-primary/30">
